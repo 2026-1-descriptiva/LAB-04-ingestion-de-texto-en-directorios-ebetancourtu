@@ -5,7 +5,9 @@
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
-
+import zipfile
+import os
+import csv
 def pregunta_01():
     """
     La información requerida para este laboratio esta almacenada en el
@@ -71,3 +73,27 @@ def pregunta_01():
 
 
     """
+    # Descomprimir
+    with zipfile.ZipFile("files/input.zip", "r") as z:
+        z.extractall("files/input")
+
+    def build_dataset(split, output_file):
+        rows = []
+        for sentiment in ["negative", "neutral", "positive"]:
+            folder = f"files/input/{split}/{sentiment}"
+            if not os.path.exists(folder):
+                continue
+            for filename in sorted(os.listdir(folder)):
+                filepath = os.path.join(folder, filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    phrase = f.read().strip()
+                rows.append((phrase, sentiment))
+
+        os.makedirs("files/output", exist_ok=True)
+        with open(f"files/output/{output_file}", "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["phrase", "target"])
+            writer.writerows(rows)
+
+    build_dataset("train", "train_dataset.csv")
+    build_dataset("test", "test_dataset.csv")
